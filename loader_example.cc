@@ -852,6 +852,23 @@ static void Dump(const tinygltf::Model &model) {
   }
 }
 
+bool loadImageDataFunc(tinygltf::Image *gltfImage, const int imageIndex,
+                       std::string *error, std::string *warning, int req_width,
+                       int req_height, const unsigned char *bytes, int size,
+                       void *userData) {
+  // KTX files will be handled by our own code
+  if (gltfImage->mimeType == "image/ktx2") 
+  {
+    gltfImage->as_is = true;
+    gltfImage->image = std::vector<unsigned char>(bytes, bytes + size);
+
+    return true;
+  }
+
+  return tinygltf::LoadImageData(gltfImage, imageIndex, error, warning,
+                                 req_width, req_height, bytes, size, userData);
+}
+
 int main(int argc, char **argv) {
   if (argc < 2) {
     printf("Needs input.gltf\n");
@@ -866,6 +883,9 @@ int main(int argc, char **argv) {
 
   tinygltf::Model model;
   tinygltf::TinyGLTF gltf_ctx;
+
+  gltf_ctx.SetImageLoader(loadImageDataFunc, nullptr);
+
   std::string err;
   std::string warn;
   std::string input_filename(argv[1]);

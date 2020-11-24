@@ -3886,6 +3886,16 @@ static bool ParseTexture(Texture *texture, std::string *err, const json &o,
   ParseExtensionsProperty(&texture->extensions, err, o);
   ParseExtrasProperty(&texture->extras, o);
 
+  // gltfpack stores the source in the KHR_texture_basisu extension
+  if (!texture->extensions.empty()) {
+    auto extIt = texture->extensions.find("KHR_texture_basisu");
+    if (extIt != texture->extensions.end()) {
+      auto basisuVal = extIt->second;
+      Value::Object objMap = basisuVal.Get<Value::Object>();
+      texture->source = objMap.at("source").GetNumberAsInt();
+    }
+  }
+
   if (store_original_json_for_extras_and_extensions) {
     {
       json_const_iterator it;
